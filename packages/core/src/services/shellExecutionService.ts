@@ -89,6 +89,7 @@ export interface ShellExecutionConfig {
   defaultFg?: string;
   defaultBg?: string;
   sanitizationConfig: EnvironmentSanitizationConfig;
+  useGitBashOnWindows?: boolean;
   // Used for testing
   disableDynamicLineTrimming?: boolean;
   scrollback?: number;
@@ -207,6 +208,7 @@ export class ShellExecutionService {
       onOutputEvent,
       abortSignal,
       shellExecutionConfig.sanitizationConfig,
+      shellExecutionConfig.useGitBashOnWindows,
     );
   }
 
@@ -240,16 +242,18 @@ export class ShellExecutionService {
     return { newBuffer: truncatedBuffer + chunk, truncated: true };
   }
 
-  private static childProcessFallback(
+  private static async childProcessFallback(
     commandToExecute: string,
     cwd: string,
     onOutputEvent: (event: ShellOutputEvent) => void,
     abortSignal: AbortSignal,
-    sanitizationConfig: EnvironmentSanitizationConfig,
-  ): ShellExecutionHandle {
+    sanitizationConfig?: EnvironmentSanitizationConfig,
+    useGitBashOnWindows?: boolean,
+  ): Promise<ShellExecutionHandle> {
     try {
       const isWindows = os.platform() === 'win32';
-      const { executable, argsPrefix, shell } = getShellConfiguration();
+      const shellConfiguration = getShellConfiguration(useGitBashOnWindows);
+      const { executable, argsPrefix, shell } = shellConfiguration;
       const guardedCommand = ensurePromptvarsDisabled(commandToExecute, shell);
       const spawnArgs = [...argsPrefix, guardedCommand];
 
@@ -260,7 +264,10 @@ export class ShellExecutionService {
         shell: false,
         detached: !isWindows,
         env: {
-          ...sanitizeEnvironment(process.env, sanitizationConfig),
+          ...sanitizeEnvironment(
+            process.env,
+            sanitizationConfig ?? ({} as EnvironmentSanitizationConfig),
+          ),
           GEMINI_CLI: '1',
           TERM: 'xterm-256color',
           PAGER: 'cat',
@@ -484,7 +491,8 @@ export class ShellExecutionService {
         env: {
           ...sanitizeEnvironment(
             process.env,
-            shellExecutionConfig.sanitizationConfig,
+            shellExecutionConfig.sanitizationConfig ??
+              ({} as EnvironmentSanitizationConfig),
           ),
           GEMINI_CLI: '1',
           TERM: 'xterm-256color',

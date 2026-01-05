@@ -678,6 +678,8 @@ export async function loadCliConfig(
 
     coreTools: settings.tools?.core || undefined,
     allowedTools: allowedTools.length > 0 ? allowedTools : undefined,
+    experimentalUseGitBashOnWindows:
+      settings.experimental?.useGitBashOnWindows ?? false,
     policyEngineConfig,
     excludeTools,
     toolDiscoveryCommand: settings.tools?.discoveryCommand,

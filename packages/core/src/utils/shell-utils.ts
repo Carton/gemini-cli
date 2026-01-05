@@ -538,10 +538,28 @@ export function parseCommandDetails(
  * This ensures we can execute command strings predictably and securely across platforms
  * using the `spawn(executable, [...argsPrefix, commandString], { shell: false })` pattern.
  *
+ *
  * @returns The ShellConfiguration for the current environment.
  */
-export function getShellConfiguration(): ShellConfiguration {
+export function getShellConfiguration(
+  useGitBashOnWindows?: boolean,
+): ShellConfiguration {
   if (isWindows()) {
+    if (useGitBashOnWindows) {
+      const gitBashPath = findGitBash();
+      if (gitBashPath) {
+        return {
+          executable: gitBashPath,
+          argsPrefix: ['-c'],
+          shell: 'bash',
+        };
+      } else {
+        debugLogger.warn(
+          'Git Bash requested but not found. Falling back to PowerShell.',
+        );
+      }
+    }
+
     const comSpec = process.env['ComSpec'];
     if (comSpec) {
       const executable = comSpec.toLowerCase();
@@ -765,3 +783,52 @@ export const spawnAsync = (
       reject(err);
     });
   });
+
+function findGitBash(): string | undefined {
+  // 1. Check PATH
+  const pathEnv = process.env['PATH'] || '';
+  const pathEntries = pathEnv.split(path.delimiter);
+
+  for (const entry of pathEntries) {
+    const bashPath = path.join(entry, 'bash.exe');
+    if (fs.existsSync(bashPath)) {
+      // Allow if it looks like Git Bash
+      if (
+        bashPath.toLowerCase().includes('git') ||
+        bashPath.toLowerCase().includes('mingw') ||
+        bashPath.toLowerCase().includes('msys')
+      ) {
+        return bashPath;
+      }
+    }
+  }
+
+  // 2. Check common installation paths
+  const commonPaths = [
+    'C:\\Program Files\\Git\\bin\\bash.exe',
+    'C:\\Program Files (x86)\\Git\\bin\\bash.exe',
+    process.env['ProgramFiles']
+      ? path.join(process.env['ProgramFiles'], 'Git', 'bin', 'bash.exe')
+      : undefined,
+    process.env['ProgramFiles(x86)']
+      ? path.join(process.env['ProgramFiles(x86)'], 'Git', 'bin', 'bash.exe')
+      : undefined,
+    process.env['LocalAppData']
+      ? path.join(
+          process.env['LocalAppData'],
+          'Programs',
+          'Git',
+          'bin',
+          'bash.exe',
+        )
+      : undefined,
+  ].filter((p): p is string => !!p);
+
+  for (const p of commonPaths) {
+    if (fs.existsSync(p)) {
+      return p;
+    }
+  }
+
+  return undefined;
+}

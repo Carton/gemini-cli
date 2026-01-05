@@ -398,6 +398,7 @@ export interface ConfigParameters {
   plan?: boolean;
   onModelChange?: (model: string) => void;
   mcpEnabled?: boolean;
+  experimentalUseGitBashOnWindows?: boolean;
   extensionsEnabled?: boolean;
   agents?: AgentSettings;
   onReload?: () => Promise<{
@@ -446,6 +447,7 @@ export class Config {
   private geminiMdFilePaths: string[];
   private readonly showMemoryUsage: boolean;
   private readonly accessibility: AccessibilitySettings;
+  readonly experimentalUseGitBashOnWindows: boolean;
   private readonly telemetrySettings: TelemetrySettings;
   private readonly usageStatisticsEnabled: boolean;
   private geminiClient!: GeminiClient;
@@ -681,6 +683,9 @@ export class Config {
     this.truncateToolOutputLines =
       params.truncateToolOutputLines ?? DEFAULT_TRUNCATE_TOOL_OUTPUT_LINES;
     this.enableToolOutputTruncation = params.enableToolOutputTruncation ?? true;
+    this.experimentalUseGitBashOnWindows =
+      params.experimentalUseGitBashOnWindows ?? false;
+
     // // TODO(joshualitt): Re-evaluate the todo tool for 3 family.
     this.useWriteTodos = isPreviewModel(this.model)
       ? false

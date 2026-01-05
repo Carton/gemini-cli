@@ -1396,6 +1396,16 @@ const SETTINGS_SCHEMA = {
     description: 'Setting to enable experimental features',
     showInDialog: false,
     properties: {
+      useGitBashOnWindows: {
+        type: 'boolean',
+        label: 'Use Git Bash on Windows',
+        category: 'Experimental',
+        requiresRestart: true,
+        default: false,
+        description:
+          'Use Git Bash as the default shell on Windows instead of PowerShell.',
+        showInDialog: true,
+      },
       enableAgents: {
         type: 'boolean',
         label: 'Enable Agents',
