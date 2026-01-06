@@ -205,6 +205,18 @@ export class ShellToolInvocation extends BaseToolInvocation<
       // Start timeout
       resetTimeout();
 
+      // Merge with global config to ensure settings like useGitBashOnWindows are picked up
+      const globalShellConfig = this.config.getShellExecutionConfig();
+      const effectiveShellExecutionConfig = {
+        ...globalShellConfig,
+        ...shellExecutionConfig,
+        pager: 'cat',
+        sanitizationConfig:
+          shellExecutionConfig?.sanitizationConfig ??
+          globalShellConfig.sanitizationConfig ??
+          this.config.sanitizationConfig,
+      };
+
       const { result: resultPromise, pid } =
         await ShellExecutionService.execute(
           commandToExecute,
@@ -250,13 +262,7 @@ export class ShellToolInvocation extends BaseToolInvocation<
           },
           combinedController.signal,
           this.config.getEnableInteractiveShell(),
-          {
-            ...shellExecutionConfig,
-            pager: 'cat',
-            sanitizationConfig:
-              shellExecutionConfig?.sanitizationConfig ??
-              this.config.sanitizationConfig,
-          },
+          effectiveShellExecutionConfig,
         );
 
       if (pid && setPidCallback) {

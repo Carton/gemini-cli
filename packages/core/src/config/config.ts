@@ -676,6 +676,10 @@ export class Config {
       showColor: params.shellExecutionConfig?.showColor ?? false,
       pager: params.shellExecutionConfig?.pager ?? 'cat',
       sanitizationConfig: this.sanitizationConfig,
+      useGitBashOnWindows:
+        params.experimentalUseGitBashOnWindows ??
+        params.shellExecutionConfig?.useGitBashOnWindows ??
+        false,
     };
     this.truncateToolOutputThreshold =
       params.truncateToolOutputThreshold ??
@@ -1827,6 +1831,9 @@ export class Config {
       sanitizationConfig:
         config.sanitizationConfig ??
         this.shellExecutionConfig.sanitizationConfig,
+      useGitBashOnWindows:
+        config.useGitBashOnWindows ??
+        this.shellExecutionConfig.useGitBashOnWindows,
     };
   }
   getScreenReader(): boolean {
