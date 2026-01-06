@@ -94,7 +94,9 @@ export class ShellProcessor implements IPromptProcessor {
       ];
     }
 
-    const { shell } = getShellConfiguration();
+    const { shell } = getShellConfiguration(
+      config?.getShellExecutionConfig().useGitBashOnWindows,
+    );
     const userArgsEscaped = escapeShellArg(userArgsRaw, shell);
 
     const resolvedInjections: ResolvedShellInjection[] = injections.map(

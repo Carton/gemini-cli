@@ -217,6 +217,11 @@ export class ShellToolInvocation extends BaseToolInvocation<
           this.config.sanitizationConfig,
       };
 
+      debugLogger.log('[ShellTool] Effective Shell Config:', {
+        useGitBashOnWindows: effectiveShellExecutionConfig.useGitBashOnWindows,
+        platform: os.platform(),
+      });
+
       const { result: resultPromise, pid } =
         await ShellExecutionService.execute(
           commandToExecute,
@@ -399,7 +404,7 @@ export class ShellToolInvocation extends BaseToolInvocation<
   }
 }
 
-function getShellToolDescription(): string {
+function getShellToolDescription(useGitBashOnWindows?: boolean): string {
   const returnedInfo = `
 
       The following information is returned:
@@ -415,14 +420,20 @@ function getShellToolDescription(): string {
       Process Group PGID: Process group started or \`(none)\``;
 
   if (os.platform() === 'win32') {
+    if (useGitBashOnWindows) {
+      return `This tool executes a given shell command as \`bash -c <command>\` using Git Bash. Command can start background processes using \`&\`.${returnedInfo}`;
+    }
     return `This tool executes a given shell command as \`powershell.exe -NoProfile -Command <command>\`. Command can start background processes using PowerShell constructs such as \`Start-Process -NoNewWindow\` or \`Start-Job\`.${returnedInfo}`;
   } else {
     return `This tool executes a given shell command as \`bash -c <command>\`. Command can start background processes using \`&\`. Command is executed as a subprocess that leads its own process group. Command process group can be terminated as \`kill -- -PGID\` or signaled as \`kill -s SIGNAL -- -PGID\`.${returnedInfo}`;
   }
 }
 
-function getCommandDescription(): string {
+function getCommandDescription(useGitBashOnWindows?: boolean): string {
   if (os.platform() === 'win32') {
+    if (useGitBashOnWindows) {
+      return 'Exact bash command to execute as `bash -c <command>`';
+    }
     return 'Exact command to execute as `powershell.exe -NoProfile -Command <command>`';
   } else {
     return 'Exact bash command to execute as `bash -c <command>`';
@@ -442,17 +453,18 @@ export class ShellTool extends BaseDeclarativeTool<
     void initializeShellParsers().catch(() => {
       // Errors are surfaced when parsing commands.
     });
+    const useGitBash = config.getShellExecutionConfig().useGitBashOnWindows;
     super(
       ShellTool.Name,
       'Shell',
-      getShellToolDescription(),
+      getShellToolDescription(useGitBash),
       Kind.Execute,
       {
         type: 'object',
         properties: {
           command: {
             type: 'string',
-            description: getCommandDescription(),
+            description: getCommandDescription(useGitBash),
           },
           description: {
             type: 'string',

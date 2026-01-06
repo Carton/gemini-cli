@@ -255,7 +255,9 @@ export class HookRunner {
       let stderr = '';
       let timedOut = false;
 
-      const shellConfig = getShellConfiguration();
+      const shellConfig = getShellConfiguration(
+        this.config.getShellExecutionConfig().useGitBashOnWindows,
+      );
       const command = this.expandCommand(
         hookConfig.command,
         input,

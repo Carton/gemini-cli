@@ -471,7 +471,9 @@ export class ShellExecutionService {
     try {
       const cols = shellExecutionConfig.terminalWidth ?? 80;
       const rows = shellExecutionConfig.terminalHeight ?? 30;
-      const { executable, argsPrefix, shell } = getShellConfiguration();
+      const { executable, argsPrefix, shell } = getShellConfiguration(
+        shellExecutionConfig.useGitBashOnWindows,
+      );
 
       const resolvedExecutable = await resolveExecutable(executable);
       if (!resolvedExecutable) {
