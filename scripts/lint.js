@@ -45,7 +45,10 @@ function getPlatformArch() {
       shellcheck: 'darwin.aarch64',
     };
   }
-  throw new Error(`Unsupported platform/architecture: ${platform}/${arch}`);
+  return {
+    actionlint: 'unsupported',
+    shellcheck: 'unsupported',
+  };
 }
 
 const platformArch = getPlatformArch();
@@ -141,6 +144,13 @@ export function setupLinters() {
   mkdirSync(TEMP_DIR, { recursive: true });
 
   for (const linter in LINTERS) {
+    if (
+      (linter === 'actionlint' || linter === 'shellcheck') &&
+      platformArch.actionlint === 'unsupported'
+    ) {
+      console.log(`Skipping ${linter} installation (unsupported platform).`);
+      continue;
+    }
     const { check, installer } = LINTERS[linter];
     if (!runCommand(check, 'ignore')) {
       console.log(`Installing ${linter}...`);
@@ -164,6 +174,10 @@ export function runESLint() {
 
 export function runActionlint() {
   console.log('\nRunning actionlint...');
+  if (platformArch.actionlint === 'unsupported') {
+    console.log('Skipping actionlint (unsupported platform).');
+    return;
+  }
   if (!runCommand(LINTERS.actionlint.run)) {
     process.exit(1);
   }
@@ -171,6 +185,10 @@ export function runActionlint() {
 
 export function runShellcheck() {
   console.log('\nRunning shellcheck...');
+  if (platformArch.shellcheck === 'unsupported') {
+    console.log('Skipping shellcheck (unsupported platform).');
+    return;
+  }
   if (!runCommand(LINTERS.shellcheck.run)) {
     process.exit(1);
   }
