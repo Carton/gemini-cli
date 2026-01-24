@@ -1,5 +1,5 @@
 {
-  "name": "@google/gemini-cli",
+  "name": "gemini-dev",
   "version": "0.27.0-nightly.20260121.97aac696f",
   "engines": {
     "node": ">=20.0.0"
@@ -71,7 +71,7 @@
     }
   },
   "bin": {
-    "gemini": "bundle/gemini.js"
+    "gemini-dev": "bundle/gemini-dev.js"
   },
   "files": [
     "bundle/",
